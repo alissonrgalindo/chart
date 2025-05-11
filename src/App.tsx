@@ -1,10 +1,13 @@
-import { ChartDashboard } from "./components/ChartDashboard"
+import { useOverview } from "@/hooks/useOverview";
 
 function App() {
+  const { data, loading, error } = useOverview();
 
+  if (loading) return <p>Carregando...</p>;
+  if (error) return <p>{error}</p>;
   return (
     <div className="p-4">
-      <ChartDashboard />
+      <pre>{JSON.stringify(data, null, 2)}</pre>
     </div>
   )
 }
