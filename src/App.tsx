@@ -5,7 +5,7 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { Toaster } from "sonner";
 
 import Overview from "@/pages/Overview";
-// import Campaigns from "@/pages/Campaigns"
+import Campaigns from "@/pages/Campaigns"
 import CreateCampaign from "@/pages/CreateCampaign";
 
 function App() {
@@ -19,7 +19,7 @@ function App() {
           <div className="flex flex-1 flex-col overflow-auto">
             <Routes>
               <Route path="/" element={<Overview />} />
-              {/* <Route path="/campaigns" element={<Campaigns />} /> */}
+              <Route path="/campaigns" element={<Campaigns />} />
               <Route path="/create-campaign" element={<CreateCampaign />} />
             </Routes>
           </div>
