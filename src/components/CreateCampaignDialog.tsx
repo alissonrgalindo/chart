@@ -28,20 +28,32 @@ const weekDays: WeekDay[] = [
   "sunday",
 ]
 
+const initialInstallsState = () => 
+  Object.fromEntries(weekDays.map((d) => [d, "0"])) as Record<WeekDay, string>
+
 export function CreateCampaignDialog() {
   const { campaigns, addCampaign } = useCampaigns()
   const [open, setOpen] = useState(false)
   const [name, setName] = useState("")
-  const [installs, setInstalls] = useState<Record<WeekDay, string>>(
-    Object.fromEntries(weekDays.map((d) => [d, "0"])) as Record<WeekDay, string>
-  )
+  const [installs, setInstalls] = useState<Record<WeekDay, string>>(initialInstallsState())
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const handleChange = (day: WeekDay, value: string) => {
-    setInstalls((prev) => ({ ...prev, [day]: value }))
+    if (value === "" || /^\d+$/.test(value)) {
+      setInstalls((prev) => ({ ...prev, [day]: value }))
+    }
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
+  const resetForm = () => {
+    setName("")
+    setInstalls(initialInstallsState())
+  }
+
+  const validateForm = () => {
+    if (!name.trim()) {
+      toast.error("Campaign name is required")
+      return false
+    }
 
     const exists = campaigns.some(
       (c) => c.name.trim().toLowerCase() === name.trim().toLowerCase()
@@ -49,29 +61,71 @@ export function CreateCampaignDialog() {
 
     if (exists) {
       toast.error("Campaign name already exists")
+      return false
+    }
+
+    return true
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    if (!validateForm()) {
       return
     }
 
-    const newCampaign = {
-      id: crypto.randomUUID(),
-      name: name.trim(),
-      installs: weekDays.map((day) => ({
-        day,
-        value: Number(installs[day]),
-      })),
+    try {
+      setIsSubmitting(true)
+      
+      const newCampaign = {
+        id: crypto.randomUUID(),
+        name: name.trim(),
+        installs: weekDays.map((day) => ({
+          day,
+          value: Number(installs[day] || 0),
+        })),
+      }
+
+      addCampaign(newCampaign)
+      toast.success("Campaign created successfully")
+      resetForm()
+      setTimeout(() => setOpen(false), 100)
+    } catch (error) {
+      toast.error("Failed to create campaign")
+      console.error(error)
+    } finally {
+      setIsSubmitting(false)
     }
+  }
 
-    addCampaign(newCampaign)
-    toast.success("Campaign created successfully")
-
-    setName("")
-    setInstalls(Object.fromEntries(weekDays.map((d) => [d, "0"])) as Record<WeekDay, string>)
-
-    setTimeout(() => setOpen(false), 100)
+  const applyTemplate = (template: "weekend" | "weekday" | "equal") => {
+    const newInstalls = { ...installs }
+    
+    if (template === "weekend") {
+      weekDays.forEach(day => {
+        newInstalls[day] = ["saturday", "sunday"].includes(day) ? "100" : "20"
+      })
+    } else if (template === "weekday") {
+      weekDays.forEach(day => {
+        newInstalls[day] = ["monday", "tuesday", "wednesday", "thursday", "friday"].includes(day) ? "80" : "30"
+      })
+    } else if (template === "equal") {
+      weekDays.forEach(day => {
+        newInstalls[day] = "50"
+      })
+    }
+    
+    setInstalls(newInstalls)
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={(newOpen) => {
+      if (!newOpen) {
+        // Reset form when dialog is closed
+        resetForm()
+      }
+      setOpen(newOpen)
+    }}>
       <DialogTrigger asChild>
         <SidebarMenuButton>
           <PlusIcon />
@@ -94,34 +148,83 @@ export function CreateCampaignDialog() {
               id="name"
               value={name}
               onChange={(e) => setName(e.target.value)}
+              placeholder="Enter campaign name"
               required
+              autoFocus
+              className="mt-1"
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            {weekDays.map((day) => (
-              <div key={day}>
-                <Label htmlFor={day}>
-                  {day.charAt(0).toUpperCase() + day.slice(1)}
-                </Label>
-                <Input
-                  id={day}
-                  type="number"
-                  min="0"
-                  value={installs[day]}
-                  onChange={(e) => handleChange(day, e.target.value)}
-                />
+          <div className="space-y-2">
+            <div className="flex justify-between items-center">
+              <Label>Daily Installs</Label>
+              <div className="flex space-x-2">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => applyTemplate("equal")}
+                >
+                  Equal
+                </Button>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => applyTemplate("weekday")}
+                >
+                  Weekday
+                </Button>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => applyTemplate("weekend")}
+                >
+                  Weekend
+                </Button>
               </div>
-            ))}
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+              {weekDays.map((day) => (
+                <div key={day}>
+                  <Label htmlFor={day} className="capitalize">
+                    {day}
+                  </Label>
+                  <Input
+                    id={day}
+                    type="text"
+                    inputMode="numeric"
+                    min="0"
+                    value={installs[day]}
+                    onChange={(e) => handleChange(day, e.target.value)}
+                    className="mt-1"
+                  />
+                </div>
+              ))}
+            </div>
           </div>
 
           <DialogFooter className="pt-2">
-            <Button type="submit">Create</Button>
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={resetForm}
+            >
+              Reset
+            </Button>
             <DialogClose asChild>
               <Button type="button" variant="outline">
                 Cancel
               </Button>
             </DialogClose>
+            <Button 
+              type="submit" 
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? "Creating..." : "Create"}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>
