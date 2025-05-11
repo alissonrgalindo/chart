@@ -1,39 +1,36 @@
-import { useEffect, useState } from "react";
-import { api } from "@/lib/api";
+import { useEffect } from "react"
+import { useOverviewStore } from "@/store/overviewStore"
 
-type DayData = {
-  day: string;
-  value: number;
-};
-
-type OverviewResponse = {
-  installs: DayData[];
-  revenue: DayData[];
-};
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 
 export function useOverview() {
-  const [data, setData] = useState<OverviewResponse | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const {
+    data,
+    loading,
+    error,
+    setData,
+    setLoading,
+    setError,
+  } = useOverviewStore()
 
   useEffect(() => {
-    async function fetchOverview() {
+    const fetchData = async () => {
+      setLoading(true)
       try {
-        const res = await api.get<OverviewResponse>(
-          import.meta.env.VITE_API_OVERVIEW_URL
-        );
-        setData(res.data);
+        const res = await fetch(`${API_BASE_URL}/overview`)
+        const json = await res.json()
+        setData(json)
+        setError(null)
       } catch (error) {
         console.error(error);
-        setError("Erro ao buscar dados do overview.");
+        setError("Failed to fetch overview data")
       } finally {
-        setLoading(false);
+        setLoading(false)
       }
     }
-  
-    fetchOverview();
-  }, []);
-  
 
-  return { data, loading, error };
+    if (!data) fetchData()
+  }, [data, setData, setLoading, setError])
+
+  return { data, loading, error }
 }

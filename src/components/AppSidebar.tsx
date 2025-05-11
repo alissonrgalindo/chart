@@ -1,54 +1,90 @@
+"use client"
+
+import * as React from "react"
+import { useLocation, Link } from "react-router-dom"
 import {
   BarChartIcon,
-  PlusCircleIcon,
   LayoutDashboardIcon,
+  UserCircleIcon,
 } from "lucide-react"
-import { Link } from "react-router-dom"
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-} from "@/components/ui/sidebar"
 
-export function AppSidebar() {
+import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarRail } from "@/components/ui/sidebar"
+import { CreateCampaignDialog  } from "@/components/CreateCampaignDialog"
+
+export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
+  const location = useLocation()
+
+  const menuItems = [
+    {
+      title: "Campaigns",
+      url: "/campaigns",
+      icon: BarChartIcon,
+    },
+    {
+      title: "Overview",
+      url: "/overview",
+      icon: LayoutDashboardIcon,
+    },
+  ]
+
   return (
-    <Sidebar>
+    <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
-        <div className="p-4 font-semibold text-lg">Dashboard</div>
-      </SidebarHeader>
-      <SidebarContent>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild>
+            <SidebarMenuButton
+              asChild
+              className="data-[slot=sidebar-menu-button]:!p-1.5"
+            >
               <Link to="/">
-                <LayoutDashboardIcon className="mr-2" />
-                Visão Geral
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-
-          <SidebarMenuItem>
-            <SidebarMenuButton asChild>
-              <Link to="/campaigns">
-                <BarChartIcon className="mr-2" />
-                Campanhas
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-
-          <SidebarMenuItem>
-            <SidebarMenuButton asChild>
-              <Link to="/create-campaign">
-                <PlusCircleIcon className="mr-2" />
-                Criar Campanha
+                <UserCircleIcon className="h-5 w-5" />
+                <span className="text-base font-semibold">My App</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
+      </SidebarHeader>
+
+      <SidebarContent className="p-2">
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <CreateCampaignDialog />
+          </SidebarMenuItem>
+
+          {menuItems.map((item) => (
+            <SidebarMenuItem key={item.title}>
+              <SidebarMenuButton
+                asChild
+                className={
+                  location.pathname === item.url
+                    ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                    : ""
+                }
+              >
+                <Link to={item.url}>
+                  <item.icon className="shrink-0" />
+                  <span>{item.title}</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          ))}
+        </SidebarMenu>
       </SidebarContent>
+
+      <SidebarFooter>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild>
+              <Link to="/settings">
+                <UserCircleIcon />
+                <span>Settings</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
+
+      <SidebarRail />
     </Sidebar>
   )
 }

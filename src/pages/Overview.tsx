@@ -33,6 +33,10 @@ export default function Overview() {
   const chartData = normalizeOverview(data.installs, data.revenue)
   const stats = calculateOverviewStats(data.installs, data.revenue)
 
+  if (chartData.length === 0) {
+    return <p className="p-4">No data available</p>
+  }
+
   return (
     <div className="p-6 space-y-6">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -41,7 +45,9 @@ export default function Overview() {
             <CardTitle className="text-sm text-muted-foreground">
               Total Installs
             </CardTitle>
-            <div className="text-2xl font-bold">{formatNumber(stats.totalInstalls)}</div>
+            <div className="text-2xl font-bold">
+              {formatNumber(stats.totalInstalls)}
+            </div>
             <Badge className="absolute top-4 right-4" variant="outline">
               <BarChartIcon className="w-4 h-4 mr-1" /> +100%
             </Badge>
@@ -92,6 +98,7 @@ export default function Overview() {
         <CardContent>
           <ResponsiveContainer width="100%" height={300}>
             <AreaChart data={chartData}>
+              <title>Chart showing installs and revenue per day</title>
               <defs>
                 <linearGradient id="installs" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#4f46e5" stopOpacity={0.8} />

@@ -1,16 +1,14 @@
-type DayValue = { day: string; value: number }
-
-export function calculateOverviewStats(installs: DayValue[], revenue: DayValue[]) {
-  const totalInstalls = installs.reduce((acc, cur) => acc + cur.value, 0)
-  const totalRevenue = revenue.reduce((acc, cur) => acc + cur.value, 0)
-
-  const averageInstalls = totalInstalls / installs.length
-  const averageRevenue = totalRevenue / revenue.length
+export function calculateOverviewStats(
+  installs: { day: string; value: number }[],
+  revenue: { day: string; value: number }[]
+) {
+  const totalInstalls = installs.reduce((sum, i) => sum + i.value, 0)
+  const totalRevenue = revenue.reduce((sum, r) => sum + r.value, 0)
 
   return {
     totalInstalls,
     totalRevenue,
-    averageInstalls,
-    averageRevenue,
+    averageInstalls: Math.round(totalInstalls / 7),
+    averageRevenue: totalRevenue / 7,
   }
 }

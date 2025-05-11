@@ -1,5 +1,3 @@
-import { useEffect, useState } from "react"
-import { useCampaigns } from "@/hooks/useCampaigns"
 import {
   Card,
   CardContent,
@@ -24,7 +22,10 @@ import {
   YAxis,
 } from "recharts"
 
-const weekDays = [
+import { useCampaigns } from "@/hooks/useCampaigns"
+import type { WeekDay } from "@/store/campaignStore"
+
+const weekDays: WeekDay[] = [
   "monday",
   "tuesday",
   "wednesday",
@@ -34,30 +35,24 @@ const weekDays = [
   "sunday",
 ]
 
-export default function Campaigns() {
-  const { campaigns, loading, error } = useCampaigns()
-  const [selectedId, setSelectedId] = useState<string | null>(
-    localStorage.getItem("selectedCampaignId")
-  )
-
-  useEffect(() => {
-    if (selectedId) {
-      localStorage.setItem("selectedCampaignId", selectedId)
-    }
-  }, [selectedId])
+export default function CampaignsPage() {
+  const {
+    campaigns,
+    loading,
+    error,
+    selectedId,
+    setSelectedId,
+  } = useCampaigns()
 
   const selected = campaigns.find((c) => c.id === selectedId)
 
-  const combinedData =
-    selected &&
-    weekDays.map((day) => ({
-      day,
-      installs: selected.installs.find((d) => d.day === day)?.value ?? 0,
-      revenue:
-        "revenue" in selected
-          ? (selected as any).revenue?.find((d: any) => d.day === day)?.value ?? 0
-          : 0,
-    }))
+  const combinedData = selected
+    ? weekDays.map((day) => ({
+        day,
+        installs: selected.installs.find((d) => d.day === day)?.value ?? 0,
+        revenue: selected.revenue?.find((d) => d.day === day)?.value ?? 0,
+      }))
+    : []
 
   return (
     <div className="p-6 space-y-6">
@@ -77,6 +72,7 @@ export default function Campaigns() {
             </SelectContent>
           </Select>
         </CardHeader>
+
         <CardContent>
           {loading && <p>Loading...</p>}
           {error && <p className="text-red-500">{error}</p>}
@@ -85,7 +81,7 @@ export default function Campaigns() {
               Select a campaign to view analytics.
             </p>
           )}
-          {!loading && selected && combinedData && (
+          {!loading && selected && (
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={combinedData}>
                 <CartesianGrid strokeDasharray="3 3" />

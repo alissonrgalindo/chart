@@ -1,27 +1,15 @@
-type DayValue = { day: string; value: number }
-
 export function normalizeOverview(
-  installs: DayValue[],
-  revenue: DayValue[]
+  installs: { day: string; value: number }[],
+  revenue: { day: string; value: number }[]
 ) {
-  const weekDays = [
-    "monday",
-    "tuesday",
-    "wednesday",
-    "thursday",
-    "friday",
-    "saturday",
-    "sunday",
-  ]
-
-  return weekDays.map((day) => {
-    const installData = installs.find((d) => d.day === day)?.value || 0
-    const revenueData = revenue.find((d) => d.day === day)?.value || 0
+  return installs.map((install) => {
+    const day = install.day
+    const revenueValue = revenue.find((r) => r.day === day)?.value ?? 0
 
     return {
-      day,
-      installs: installData,
-      revenue: revenueData,
+      day: day.charAt(0).toUpperCase() + day.slice(1),
+      installs: install.value,
+      revenue: revenueValue,
     }
   })
 }

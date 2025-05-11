@@ -1,44 +1,54 @@
-import { useEffect, useState } from "react"
-import { api } from "@/lib/api"
+import { useEffect } from "react"
+import { useCampaignStore } from "@/store/campaignStore"
+import type { Campaign } from "@/store/campaignStore"
 
-export type DayData = {
-  day: string
-  value: number
-}
-
-export type Campaign = {
-  id: string
-  name: string
-  installs: DayData[]
-}
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 
 export function useCampaigns() {
-  const [campaigns, setCampaigns] = useState<Campaign[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const {
+    campaigns,
+    loading,
+    error,
+    setCampaigns,
+    setLoading,
+    setError,
+    selectedId,
+    setSelectedId,
+    addCampaign,
+  } = useCampaignStore()
 
   useEffect(() => {
-    async function fetchCampaigns() {
+    const fetchData = async () => {
+      setLoading(true)
       try {
-        const res = await api.get<Campaign[]>(
-          import.meta.env.VITE_API_CAMPAIGNS_URL
-        )
+        const res = await fetch(`${API_BASE_URL}/campaigns`)
+        const json: Campaign[] = await res.json()
 
-        const localCampaigns = JSON.parse(
+        const local = JSON.parse(
           localStorage.getItem("customCampaigns") || "[]"
         ) as Campaign[]
 
-        setCampaigns([...res.data, ...localCampaigns])
+        setCampaigns([...json, ...local])
+        setError(null)
       } catch (error) {
         console.error(error)
-        setError("Failed to load campaigns.")
+        setError("Failed to fetch campaigns")
       } finally {
         setLoading(false)
       }
     }
 
-    fetchCampaigns()
-  }, [])
+    if (campaigns.length === 0) {
+      fetchData()
+    }
+  }, [campaigns.length, setCampaigns, setLoading, setError])
 
-  return { campaigns, loading, error }
+  return {
+    campaigns,
+    loading,
+    error,
+    selectedId,
+    setSelectedId,
+    addCampaign,
+  }
 }
