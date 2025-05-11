@@ -1,7 +1,6 @@
-import { useEffect } from "react"
-import { useOverviewStore } from "@/store/overviewStore"
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
+import { useEffect } from "react";
+import { useOverviewStore } from "@/store/overviewStore";
+import { api, endpoints } from "@/lib/api";
 
 export function useOverview() {
   const {
@@ -11,26 +10,30 @@ export function useOverview() {
     setData,
     setLoading,
     setError,
-  } = useOverviewStore()
+  } = useOverviewStore();
+
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const res = await api.get(endpoints.overview);
+      setData(res.data);
+      setError(null);
+    } catch (error) {
+      console.error("Error fetching overview data:", error);
+      setError("Failed to fetch overview data. Please check your connection.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true)
-      try {
-        const res = await fetch(`${API_BASE_URL}/overview`)
-        const json = await res.json()
-        setData(json)
-        setError(null)
-      } catch (error) {
-        console.error(error);
-        setError("Failed to fetch overview data")
-      } finally {
-        setLoading(false)
-      }
-    }
+    if (!data) fetchData();
+  }, [data, setData, setLoading, setError]);
 
-    if (!data) fetchData()
-  }, [data, setData, setLoading, setError])
-
-  return { data, loading, error }
+  return { 
+    data, 
+    loading, 
+    error,
+    refetch: fetchData
+  };
 }

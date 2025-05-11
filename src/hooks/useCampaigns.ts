@@ -1,8 +1,7 @@
-import { useEffect } from "react"
-import { useCampaignStore } from "@/store/campaignStore"
-import type { Campaign } from "@/store/campaignStore"
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
+import { useEffect } from "react";
+import { useCampaignStore } from "@/store/campaignStore";
+import type { Campaign } from "@/store/campaignStore";
+import { api, endpoints } from "@/lib/api";
 
 export function useCampaigns() {
   const {
@@ -15,33 +14,33 @@ export function useCampaigns() {
     selectedId,
     setSelectedId,
     addCampaign,
-  } = useCampaignStore()
+  } = useCampaignStore();
 
   useEffect(() => {
     const fetchData = async () => {
-      setLoading(true)
+      setLoading(true);
       try {
-        const res = await fetch(`${API_BASE_URL}/campaigns`)
-        const json: Campaign[] = await res.json()
+        const res = await api.get(endpoints.campaigns);
+        const json: Campaign[] = res.data;
 
         const local = JSON.parse(
           localStorage.getItem("customCampaigns") || "[]"
-        ) as Campaign[]
+        ) as Campaign[];
 
-        setCampaigns([...json, ...local])
-        setError(null)
+        setCampaigns([...json, ...local]);
+        setError(null);
       } catch (error) {
-        console.error(error)
-        setError("Failed to fetch campaigns")
+        console.error("Error fetching campaigns:", error);
+        setError("Failed to fetch campaigns. Please check your connection.");
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
+    };
 
     if (campaigns.length === 0) {
-      fetchData()
+      fetchData();
     }
-  }, [campaigns.length, setCampaigns, setLoading, setError])
+  }, [campaigns.length, setCampaigns, setLoading, setError]);
 
   return {
     campaigns,
@@ -50,5 +49,5 @@ export function useCampaigns() {
     selectedId,
     setSelectedId,
     addCampaign,
-  }
+  };
 }
